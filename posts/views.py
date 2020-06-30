@@ -7,7 +7,7 @@ from .models import Post, Group, User, Follow
 
 
 def index(request):
-    post_list = Post.objects.all()
+    post_list = Post.objects.all().select_related("group")
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
@@ -122,5 +122,6 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
-    Follow.objects.get(user=user, author=author).delete()
+    follow = get_object_or_404(Follow, user=user, author=author)
+    follow.delete()
     return redirect("profile", username=username)

@@ -10,21 +10,22 @@
         {{ post.text|linebreaksbr }}
     </p>
     {% if post.group %}
-        <a class="card-link muted" href="{% url 'group_posts' post.group.slug %}">
-                <strong class="d-block text-gray-dark">#{{ post.group.title }}</strong>
+        <a class="card-link muted"
+           href="{% url 'group_posts' post.group.slug %}">
+            <strong class="d-block text-gray-dark">#{{ post.group.title }}</strong>
         </a>
     {% endif %}
     <div class="d-flex justify-content-between align-items-center">
         <div class="btn-group ">
             <a class="btn btn-sm text-muted"
                href="
-{% url 'post' username=post.author.username post_id=post.id %}"
+    {% url 'post' username=post.author.username post_id=post.id %}"
                role="button">
                 {% if post.comments.exists %}
                     {{ post.comments.count }} комментариев
-                    {% else%}
+                {% else %}
                     Добавить комментарий
-                    {% endif %}
+                {% endif %}
             </a>
             {% if request.user == post_author %}
                 <a class="btn btn-sm text-muted"

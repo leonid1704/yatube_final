@@ -1,8 +1,8 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
-from django.core.cache import cache
 
 from .models import User, Post, Group, Follow
+from yatube.settings import CACHES
 
 
 class ProfileTest(TestCase):
@@ -57,6 +57,8 @@ class ProfileTest(TestCase):
         self.assertEqual(test_post.group, group)
         self.assertEqual(test_post.text, text)
 
+    @override_settings(CACHES={
+        'default': {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}})
     def test_pub_place(self):
         text = "Приличный текст"
         post = Post.objects.create(author=self.user, group=self.group,
@@ -67,6 +69,8 @@ class ProfileTest(TestCase):
         for url in urls_list:
             self.contains(url, text, self.group)
 
+    @override_settings(CACHES={
+        'default': {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}})
     def test_post_edit(self):
         post = Post.objects.create(author=self.user, group=self.group,
                                    text="Приличный текст")
@@ -95,6 +99,8 @@ class ProfileTest(TestCase):
         response = self.client_logout.get('/400/ ')
         self.assertEqual(response.status_code, 404)
 
+    @override_settings(CACHES={
+        'default': {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}})
     def test_image(self):
         with open('posts/test_data/Osmislennoe_nazvanie.jpg', 'rb') as img:
             self.client_login.post(reverse("new_post"), {'author': self.user,
@@ -105,8 +111,9 @@ class ProfileTest(TestCase):
                 reverse("post", args=[self.user.username, post_id]))
             self.assertContains(response, "<img")
 
+    @override_settings(CACHES={
+        'default': {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}})
     def test_image_pub(self):
-        cache.clear()
         with open('posts/test_data/Osmislennoe_nazvanie.jpg', 'rb') as img:
             self.client_login.post(reverse("new_post"), {'author': self.user,
                                                          'text': 'post with image',
@@ -121,7 +128,7 @@ class ProfileTest(TestCase):
         self.assertContains(response_1, "<img")
         self.assertContains(response_2, "<img")
 
-    def test_not_image(self):
+    def test_pub_not_image(self):
         with open('posts/test_data/Bessmislennoe_nazvanie.txt', 'rb') as img:
             self.client_login.post(reverse("new_post"),
                                    {'author': self.user,
@@ -141,7 +148,7 @@ class ProfileTest(TestCase):
         response_new = self.client_login.get(reverse("index"))
         self.assertNotContains(response_new, text_new)
 
-    def test_auth_follow(self):
+    def test_auth_user_can_follow(self):
         author = User.objects.create_user(username="arni")
         response = self.client_login.get(reverse("profile_follow", args=[
             author.username]), follow=True)
@@ -149,13 +156,16 @@ class ProfileTest(TestCase):
         self.assertEqual(author.following.count(), 1)
         self.assertEqual(self.user.follower.count(), 1)
 
-        new_response = self.client_login.get(
+    def test_auth_user_can_unfollow(self):
+        author = User.objects.create_user(username="arni")
+        Follow.objects.create(user=self.user, author=author)
+        response = self.client_login.get(
             reverse("profile_unfollow", args=[author.username]), follow=True)
-        self.assertEqual(new_response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(author.following.count(), 0)
         self.assertEqual(self.user.follower.count(), 0)
 
-    def test_follow_pub(self):
+    def test_user_can_see_follow_pub(self):
         author = User.objects.create_user(username="arni")
         post = Post.objects.create(author=author, group=self.group,
                                    text="test")
@@ -170,7 +180,7 @@ class ProfileTest(TestCase):
         self.assertEqual(new_response.status_code, 200)
         self.assertNotContains(new_response, post.text)
 
-    def test_comment(self):
+    def test_no_auth_user_cant_comment(self):
         post = Post.objects.create(author=self.user, group=self.group,
                                    text="test")
         self.client_logout.post(
@@ -178,6 +188,9 @@ class ProfileTest(TestCase):
             {"text": "test"})
         self.assertEqual(post.comments.count(), 0)
 
+    def test_auth_user_can_comment(self):
+        post = Post.objects.create(author=self.user, group=self.group,
+                                   text="test")
         self.client_login.post(
             reverse("add_comment", args=[self.user, post.pk]),
             {"text": "test"})

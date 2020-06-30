@@ -5,17 +5,14 @@
     <div class="container">
         {% include "includes/menu.html" with index=True %}
            <h1> Последние обновления на сайте</h1>
-            <!-- Вывод ленты записей -->
             {% load cache %}
             {% cache 20 index_page %}
                 {% for post in page %}
-                  <!-- Вот он, новый include! -->
                     {% include "includes/post_card.html" with post=post %}
                 {% endfor %}
             {% endcache %}
     </div>
 
-        <!-- Вывод паджинатора -->
         {% if page.has_other_pages %}
             {% include "includes/paginator.html" with items=page paginator=paginator%}
         {% endif %}
