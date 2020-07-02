@@ -1,6 +1,7 @@
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
+import io
 
 from .models import User, Post, Group, Follow, Comment
 from yatube.settings import CACHES
@@ -101,10 +102,25 @@ class ProfileTest(TestCase):
         response = self.client_logout.get('/400/ ')
         self.assertEqual(response.status_code, 404)
 
+    @staticmethod
+    def generate_1x1_grayscale_jpg_file():
+        bytes_string = 'ff d8 ff e0 00 10 4a 46 49 46 00 01 01 01 00 48 ' \
+                       '00 48 00 00 ff db 00 43 00 03 02 02 02 02 02 03 ' \
+                       '02 02 02 03 03 03 03 04 06 04 04 04 04 04 08 06 ' \
+                       '06 05 06 09 08 0a 0a 09 08 09 09 0a 0c 0f 0c 0a ' \
+                       '0b 0e 0b 09 09 0d 11 0d 0e 0f 10 10 11 10 0a 0c ' \
+                       '12 13 12 10 13 0f 10 10 10 ff c9 00 0b 08 00 01 ' \
+                       '00 01 01 01 11 00 ff cc 00 06 00 10 10 05 ff da ' \
+                       '00 08 01 01 00 00 3f 00 d2 cf 20 ff d9'
+        bb = b''
+        for _b in bytes_string.split(' '):
+            bb += bytes.fromhex(_b)
+        return bb
+
     @override_settings(CACHES=CACHE)
     def test_image_pub(self):
         img = SimpleUploadedFile(name="test_img.jpg",
-                                 content=b"file_content",
+                                 content=self.generate_1x1_grayscale_jpg_file(),
                                  content_type="image/jpeg")
         Post.objects.create(author=self.user, text="post with image",
                             group=self.group, image=img)
