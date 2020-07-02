@@ -102,27 +102,17 @@ class ProfileTest(TestCase):
         self.assertEqual(response.status_code, 404)
 
     @override_settings(CACHES=CACHE)
-    def test_image(self):
-        img = SimpleUploadedFile(name="test_img.jpg",
-                                 content=b"file_content",
-                                 content_type="image/jpeg")
-        Post.objects.create(author=self.user, text="post with image",
-                            image=img)
-        post_id = Post.objects.filter(author=self.user).first().pk
-        response = self.client_login.get(
-            reverse("post", args=[self.user.username, post_id]))
-        self.assertContains(response, "<img")
-
-    @override_settings(CACHES=CACHE)
     def test_image_pub(self):
         img = SimpleUploadedFile(name="test_img.jpg",
                                  content=b"file_content",
                                  content_type="image/jpeg")
         Post.objects.create(author=self.user, text="post with image",
                             group=self.group, image=img)
+        post_id = Post.objects.filter(author=self.user).first().pk
         urls_list = [reverse("index"),
                      reverse("profile", args=[self.user.username]),
-                     reverse("group_posts", args=[self.group.slug])]
+                     reverse("group_posts", args=[self.group.slug]),
+                     reverse("post", args=[self.user.username, post_id])]
         for url in urls_list:
             response = self.client_login.get(url)
             self.assertContains(response, "<img")
@@ -136,7 +126,9 @@ class ProfileTest(TestCase):
                                            'text': 'post with image',
                                            'image': txt}, follow=True)
         self.assertFormError(response, "form", "image",
-                             errors='Загрузите правильное изображение. Файл, который вы загрузили, поврежден или не является изображением.')
+                             errors='Загрузите правильное изображение. Файл, '
+                                    'который вы загрузили, поврежден или '
+                                    'не является изображением.')
 
     def test_cache(self):
         text = "Приличный текст"
