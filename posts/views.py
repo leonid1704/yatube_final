@@ -46,11 +46,14 @@ def profile(request, username):
     paginator = Paginator(user_post_list, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
-    following = user.following.all()
+    can_follow = request.user.is_authenticated and request.user != user
+    following = can_follow and Follow.objects.filter(
+        user=request.user, author=user).all()
     return render(request, 'profile.html', {'post_author': user, 'page': page,
                                             'paginator': paginator,
                                             'post_count': paginator.count,
-                                            "following": following})
+                                            "following": following,
+                                            "can_follow": can_follow})
 
 
 def post_view(request, username, post_id):

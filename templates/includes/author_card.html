@@ -8,26 +8,26 @@
         </div>
     </div>
     <ul class="list-group list-group-flush">
-    {% if user.is_authenticated %}
-        <li class="list-group-item">
-            {% if following %}
-                <a class="btn btn-lg btn-light"
-                   href="{% url 'profile_unfollow' post_author.username %}"
-                   role="button">
-                    Отписаться
-                </a>
-            {% else %}
-                <a class="btn btn-lg btn-primary"
-                   href="{% url 'profile_follow' post_author.username %}"
-                   role="button">
-                    Подписаться
-                </a>
-            {% endif %}
-        </li>
-    {% endif %}
+        {% if can_follow %}
+            <li class="list-group-item">
+                {% if following %}
+                    <a class="btn btn-lg btn-light"
+                       href="{% url 'profile_unfollow' post_author.username %}"
+                       role="button">
+                        Отписаться
+                    </a>
+                {% else %}
+                    <a class="btn btn-lg btn-primary"
+                       href="{% url 'profile_follow' post_author.username %}"
+                       role="button">
+                        Подписаться
+                    </a>
+                {% endif %}
+            </li>
+        {% endif %}
         <li class="list-group-item">
             <div class="h6 text-muted">
-                Подписчиков: {{ post_author.following.count }}  <br/>
+                Подписчиков: {{ post_author.following.count }} <br/>
                 Подписан: {{ post_author.follower.count }}
             </div>
         </li>
